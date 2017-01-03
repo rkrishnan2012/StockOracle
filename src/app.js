@@ -100,7 +100,7 @@ function downloadAllSPPrices(spCompanyList, cb) {
 }
 
 function saveObjectToFile(object, name, cb) {
-    fs.writeFile(name, object, cb);
+    fs.writeFile(name, JSON.stringify(object,1,1), cb);
 }
 
 //	company = { symbol: 'CVX', name: 'CHEVRON CORP.', sector: 'ENERGY' }
