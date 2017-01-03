@@ -6,27 +6,46 @@ const fs = require('fs');
 const request = require('request');
 const ProgressBar = require('progress');
 
-// [ { symbol: 'CVX', name: 'CHEVRON CORP.', sector: 'ENERGY' }, ...]
-getSPCompanyList((spCompanyList) => {
-    /*
-		'CVX': {
-		  timeSeries: 
-		  [ { unixTime: 1483110000,
-	  		CLOSE: '117.56',
-		    HIGH: '117.75',
-		    LOW: '117.31',
-		    OPEN: '117.44',
-		    VOLUME: '497215',
-		    CDAYS: '0' }...]}
-    */
-    downloadAllSPPrices(spCompanyList, (priceList) => {
-        console.log(priceList["CVX"]);
-        saveObjectToFile(priceList, "../data/_s&pHistoricalMonthly.json", () => {
+const NEEDS_DOWNLOAD_DATA = false;
 
+getSPCompanyList((spCompanyList) => {
+    if (NEEDS_DOWNLOAD_DATA) {
+        downloadAllSPPrices(spCompanyList, (priceList) => {
+            saveObjectToFile(priceList, "../data/_s&pHistoricalMonthly.json", () => {
+            	processData(priceList);
+            });
         });
-    })
+    } else {
+    	var priceList = require("../data/_s&pHistoricalMonthly.json");
+    	processData(priceList);
+    }
 });
 
+/*
+ *	PriceList has to be an object formatted like such:
+ *	{
+ *        'CVX': {
+ *            timeSeries: [{
+ *                unixTime: 1483110000,
+ *                CLOSE: '117.56',
+ *                HIGH: '117.75',
+ *                LOW: '117.31',
+ *                OPEN: '117.44',
+ *                VOLUME: '497215',
+ *                CDAYS: '0'
+ *            }...]
+ *        },...
+ *   }
+ */
+function processData(priceList) {
+    
+}
+
+/**
+ *
+ * returns a list of S&P 500 companies, formatted like such:
+ * [ { symbol: 'CVX', name: 'CHEVRON CORP.', sector: 'ENERGY' }, ...]
+ */
 function getSPCompanyList(cb) {
     //	Read the S&P 500 Company list file.
     fs.readFile('../data/s&pConstituents.csv', 'utf8', (err, data) => {
@@ -100,10 +119,13 @@ function downloadAllSPPrices(spCompanyList, cb) {
 }
 
 function saveObjectToFile(object, name, cb) {
-    fs.writeFile(name, JSON.stringify(object,1,1), cb);
+    fs.writeFile(name, JSON.stringify(object, 1, 1), cb);
 }
 
-//	company = { symbol: 'CVX', name: 'CHEVRON CORP.', sector: 'ENERGY' }
+/*
+ * Company is an object passed as such: { symbol: 'CVX', name: 'CHEVRON CORP.', sector: 'ENERGY' }
+ * Return value is a list of prices, (see above or json file for format).
+ */
 function getHistoricalPrices(company, cb) {
     const interval = 3600;
     var timeBefore = Date.now();
@@ -131,7 +153,7 @@ function getHistoricalPrices(company, cb) {
                     if (response && response.statusCode == 403) {
                         cb(response.body, null);
                         return;
-                    } else if(response && response.statusCode == 503) {
+                    } else if (response && response.statusCode == 503) {
 
                     }
                     console.log("Error: " + url);
@@ -150,7 +172,9 @@ function getHistoricalPrices(company, cb) {
         })
 }
 
-//	company = { symbol: 'CVX', name: 'CHEVRON CORP.', sector: 'ENERGY' }
+/*
+ * Company is an object passed as such: { symbol: 'CVX', name: 'CHEVRON CORP.', sector: 'ENERGY' }
+ */
 function parseGoogleFinancePrices(company, interval, html, cb) {
     var data = html.split("\n");
     var output = {
