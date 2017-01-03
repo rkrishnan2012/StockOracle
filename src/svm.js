@@ -57,14 +57,14 @@ module.exports.analyzeData = function(dailyIndicatorList) {
             gamma: [1, 3, 5, 7],
 
             // training options 
-            kFold: 2,
+            kFold: 3,
             normalize: true,
             reduce: true,
             retainedVariance: 0.99,
             eps: 1e-3,
-            cacheSize: 200,
+            cacheSize: 1024,
             shrinking: true,
-            probability: false
+            probability: true
         });
         clf.train(training[i]).progress(function(progress) {
 
@@ -101,17 +101,31 @@ function predictGains(svm, model, name, testSet) {
     var sold = 0;
     for (var day = 0; day < testSet.length - 1; day++) {
         //	Tomorrow stocks will go up babyyyy
-        var p = clf.predictSync(testSet[day][0]);
-        if (p == 1) {
-            while (money > 3 * testSet[day][1]) {
-                money -= 3 * testSet[day][1];
-                shares += 3;
-                bought++;
+        var p = clf.predictProbabilitiesSync(testSet[day][0]);
+        var buy = (p[1] > p[0]);
+        var sell = (p[0] > p[1]);
+        if (buy) {
+            if (money > testSet[day][1]) {
+            	console.log("Buying with confidence " + p[1] + ".");
+            	if(testSet[day+1][1] > testSet[day][1]) {
+            		console.log("	Good buy. Gains = $" + (testSet[day+1][1] - testSet[day][1]));
+            	} else {
+            		console.log("	Bad buy. Loss = $" + (testSet[day+1][1] - testSet[day][1]));
+            	}
+                money -= testSet[day][1];
+                shares ++;
+                bought ++;
             }
-        } else {
-            while (shares > 3) {
-                money += 3 * testSet[day + 1][1];
-                shares -= 3;
+        } else if(sell) {
+            if (shares > 0) {
+            	console.log("Selling with confidence " + p[0] + ".");
+            	if(testSet[day][1] > testSet[day+1][1]) {
+            		console.log("	Good sell. Gains = $" + (testSet[day][1] - testSet[day+1][1]));
+            	} else {
+            		console.log("	Bad sell. Loss = $" + (testSet[day][1] - testSet[day+1][1]));
+            	}
+                money += testSet[day][1];
+                shares--;
                 sold++;
             }
         }
@@ -120,8 +134,9 @@ function predictGains(svm, model, name, testSet) {
     //	Sell whatever is at the end.
     while (shares > 0) {
         money += testSet[testSet.length - 1][1];
-        shares --;
+        shares--;
         sold++;
     }
-    console.log("Left over money after " + testSet.length + " days is $" + money + ". Bought " + bought + " shares and sold " + sold + ".");
+    
+    console.log("Gains after " + testSet.length + " days is $" + (money - 1000) + ". Traded " + bought + " total.");
 }
