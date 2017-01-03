@@ -21,7 +21,7 @@ getSPCompanyList((spCompanyList) => {
     */
     downloadAllSPPrices(spCompanyList, (priceList) => {
         console.log(priceList["CVX"]);
-        saveObjectToFile(spCompanyList, "../data/_s&pHistoricalMonthly.json", () => {
+        saveObjectToFile(priceList, "../data/_s&pHistoricalMonthly.json", () => {
 
         });
     })
@@ -85,7 +85,7 @@ function downloadAllSPPrices(spCompanyList, cb) {
             return;
         }
         output[prices.symbol] = {
-            ticker: prices.ticker,
+            ticker: prices.timeSeries,
             name: prices.name
         };
         bar.tick();
