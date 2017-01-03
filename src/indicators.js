@@ -53,6 +53,8 @@ module.exports.getTechnicalIndicators = function(priceList, intervalSecs, cb) {
                 //	Depends on Stochastic K3
                 priceList[symbol].indicators[dayNum].stochasticD3 = getStochasticD(priceList[symbol].indicators, dayNum, 4);
 
+                delete priceList[symbol].indicators[dayNum].unixTime;
+                
                 dayNum++;
                 prevDaySec = todaySec;
             }

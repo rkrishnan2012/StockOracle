@@ -10,7 +10,9 @@
   "license": "ISC",
   "dependencies": {
     "csv": "^1.1.0",
+    "node-svm": "^2.1.8",
     "progress": "^1.1.8",
-    "request": "^2.79.0"
+    "request": "^2.79.0",
+    "stringify-object": "^3.1.0"
   }
 }

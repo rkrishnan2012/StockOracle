@@ -2,24 +2,22 @@
 // S&P Constituents: https://raw.githubusercontent.com/datasets/s-and-p-500-companies/master/data/constituents.csv
 
 const fs = require('fs');
-const request = require('request');
-const ProgressBar = require('progress');
 
 const indicators = require('./indicators.js');
 const financeScraper = require('./financeScraper.js');
 const utils = require('./utils.js');
-
-const NEEDS_DOWNLOAD_DATA = false;
+const svm = require('./svm.js');
 
 financeScraper.getSPCompanyList((spCompanyList) => {
+	var NEEDS_DOWNLOAD_DATA = !utils.fileExists("../data/_s&pHistoricalYearly.json");
     if (NEEDS_DOWNLOAD_DATA) {
         financeScraper.downloadAllSPPrices(spCompanyList, (priceList) => {
-            utils.saveObjectToFile(priceList, "../data/_s&pHistoricalMonthly.json", () => {
+            utils.saveObjectToFile(priceList, "../data/_s&pHistoricalYearly.json", () => {
                 processData(priceList);
             });
         });
     } else {
-        var priceList = require("../data/_s&pHistoricalMonthly.json");
+        var priceList = require("../data/_s&pHistoricalYearly.json");
         processData(priceList);
     }
 });
@@ -42,6 +40,8 @@ financeScraper.getSPCompanyList((spCompanyList) => {
  */
 function processData(priceList) {
     indicators.getTechnicalIndicators(priceList, 24 * 60 * 60, (dailyIndicatorList) => {
-    	console.log(dailyIndicatorList["CVX"].indicators);
+    	svm.analyzeData(dailyIndicatorList, () => {
+
+    	});
     });
 }

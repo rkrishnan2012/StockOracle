@@ -1,5 +1,8 @@
 const fs = require('fs');
 const csv = require('csv');
+const ProgressBar = require('progress');
+const request = require('request');
+
 /**
  *
  * returns a list of S&P 500 companies, formatted like such:
@@ -33,7 +36,7 @@ module.exports.getSPCompanyList = function(cb) {
 
 module.exports.downloadAllSPPrices = function(spCompanyList, cb) {
     var output = {};
-    console.log("Downloading the 1 month historical data of all companies in S&P 500 list.")
+    console.log("Downloading the 1 year historical data of all companies in S&P 500 list.")
     var bar = new ProgressBar(':percent :bar :eta seconds remaining', {
         total: spCompanyList.length
     });
@@ -42,7 +45,6 @@ module.exports.downloadAllSPPrices = function(spCompanyList, cb) {
 
     var i = 0;
 
-    console.log(spCompanyList[i]);
     getHistoricalPrices(spCompanyList[i], function getPrice(err, prices) {
         if (err) {
             if (err.code == 'ECONNRESET') {
@@ -88,7 +90,7 @@ function getHistoricalPrices(company, cb) {
     //	Get last 30 days of data at interval of 1 hr for some symbol.
     //	API documentation:  http://www.networkerror.org/component/content/article/1-technical-wootness/44-googles-undocumented-finance-api.html
     const url = 'https://www.google.com/finance/getprices?q=' + company.symbol.toUpperCase() +
-        '&i=' + interval + '&p=30d&f=d,c,v,k,o,h,l&df=cpct&auto=0&ei=Ef6XUYfCqSTiAKEMg';
+        '&i=' + interval + '&p=1Y&f=d,c,v,k,o,h,l&df=cpct&auto=0&ei=Ef6XUYfCqSTiAKEMg';
     var options = {
         url: url,
         headers: {
